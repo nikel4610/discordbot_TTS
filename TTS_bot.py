@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from navertts import NaverTTS
-
+# https://discord.com/oauth2/authorize?client_id=1234120588877107240&permissions=2168832&scope=bot
 load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')

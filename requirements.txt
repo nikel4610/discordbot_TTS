@@ -3,3 +3,4 @@ NaverTTS
 asyncio
 python-dotenv
 ffmpeg-python
+PyNaCl

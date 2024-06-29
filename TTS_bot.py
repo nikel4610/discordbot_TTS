@@ -85,7 +85,7 @@ async def on_message(message):
 
             await speak_message(message, voice_client)
 
-            await voice_disconnect_after_delay(voice_client, 180.0)
+            await voice_disconnect_after_delay(voice_client, 10.0)
 
 
 bot.run(BOT_TOKEN)

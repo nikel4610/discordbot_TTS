@@ -2,7 +2,7 @@ import asyncio
 import os
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from navertts import NaverTTS
 
@@ -20,11 +20,9 @@ def preprocess_message_content(content):
     content = content.replace('ㅋ', '크').replace('ㅎ', '흐').replace('ㅠ', '유')
     return content
 
-
 async def speak_message(message, voice_client):
     processed_content = preprocess_message_content(message.content)
     tts = NaverTTS(processed_content, speed=0)
-    # tts = NaverTTS(message.content, speed=0)
     tts.save('tts.mp3')
 
     if voice_client.is_playing():
@@ -34,14 +32,6 @@ async def speak_message(message, voice_client):
 
     while voice_client.is_playing():
         await asyncio.sleep(1)
-
-
-async def voice_disconnect_after_delay(voice_client, delay):
-    print(f"Starting delay of {delay} seconds")
-    await asyncio.sleep(delay)
-    print("Delay finished, attempting to disconnect")
-    await voice_disconnect(voice_client)
-
 
 async def voice_disconnect(voice_client):
     if voice_client.is_connected():
@@ -55,18 +45,16 @@ async def voice_disconnect(voice_client):
         await voice_client.disconnect()
         print("Disconnected from voice channel")
 
-
 async def find_voice_channel(guild, user):
     for vc in guild.voice_channels:
         if user in [member for member in vc.members if not member.bot]:
             return vc
     return None
 
-
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
-
+    check_voice_channel.start()
 
 @bot.event
 async def on_message(message):
@@ -83,9 +71,20 @@ async def on_message(message):
                 await message.channel.send('음성 채널에 접속 중이 아니에요!')
         elif message.content == '!update':
             embed = discord.Embed(
-                title="최근 업데이트 내역입니다 (2024.06.29)",
+                title="최근 업데이트 내역입니다 (2024.07.01)",
                 description="업데이트 내용을 확인하세요.\n\n---",
                 color=discord.Color.blue()
+            )
+            embed.add_field(
+                name="7월 1일 업데이트 내용",
+                value="1. 혼자 남겨졌을 때 자동으로 나가는 기능 추가\n"
+                    "2. 300초 뒤에 자동으로 나가는 기능 제거",
+                inline=False
+            )
+            embed.add_field(
+                name="\u200b", 
+                value="\u200b",
+                inline=False
             )
             embed.add_field(
                 name="6월 29일 업데이트 내용",
@@ -119,7 +118,10 @@ async def on_message(message):
 
             await speak_message(message, voice_client)
 
-            await voice_disconnect_after_delay(voice_client, 300.0)
-
+@tasks.loop(minutes=1)
+async def check_voice_channel():
+    for voice_client in bot.voice_clients:
+        if len(voice_client.channel.members) == 1:  # Only the bot is in the channel
+            await voice_disconnect(voice_client)
 
 bot.run(BOT_TOKEN)

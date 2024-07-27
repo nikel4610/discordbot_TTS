@@ -79,13 +79,13 @@ async def on_message(message):
                 await message.channel.send('음성 채널에 접속 중이 아니에요!')
         elif message.content == '!update':
             embed = discord.Embed(
-                title="최근 업데이트 내역입니다 (2024.07.01)",
+                title="최근 업데이트 내역입니다 (2024.07.27)",
                 description="업데이트 내용을 확인하세요.\n\n---",
                 color=discord.Color.blue()
             )
             embed.add_field(
                 name="7월 27일 업데이트 내용",
-                value="1. 무식이 수출 완료\n"
+                value="1. 무식이 수출 완료\n",
                 inline=False
             )
             embed.add_field(

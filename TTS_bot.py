@@ -45,11 +45,11 @@ BOT_SMOKE_TEST = os.getenv('BOT_SMOKE_TEST') == '1'
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', help_command=None, intents=intents)
 
 voice_clients = {}
 tts_queues = {}
-tts_workers = set()
+tts_workers = {}
 disconnecting_sessions = set()
 
 def preprocess_message_content(content):
@@ -135,7 +135,7 @@ async def speak_message(message, voice_client):
 async def tts_worker(session_key):
     queue = tts_queues.get(session_key)
     if not queue:
-        tts_workers.discard(session_key)
+        tts_workers.pop(session_key, None)
         return
 
     try:
@@ -166,6 +166,9 @@ async def tts_worker(session_key):
 
                 await speak_message(message, voice_client)
             except Exception as exc:
+                if session_key in disconnecting_sessions:
+                    LOGGER.info('TTS playback stopped during disconnect: %s', exc)
+                    continue
                 LOGGER.exception('TTS playback failed: %s', exc)
                 await message.channel.send('TTS 재생 중 문제가 생겼어요.')
             finally:
@@ -176,12 +179,16 @@ async def tts_worker(session_key):
 
             if queue.empty():
                 break
+    except asyncio.CancelledError:
+        LOGGER.info('TTS worker cancelled (Guild ID: %s, Channel ID: %s)', session_key[0], session_key[1])
     finally:
-        tts_workers.discard(session_key)
+        current_task = asyncio.current_task()
+        if tts_workers.get(session_key) is current_task:
+            tts_workers.pop(session_key, None)
+
         queue = tts_queues.get(session_key)
         if queue and not queue.empty() and session_key not in disconnecting_sessions:
-            tts_workers.add(session_key)
-            asyncio.create_task(tts_worker(session_key))
+            tts_workers[session_key] = asyncio.create_task(tts_worker(session_key))
 
 
 async def enqueue_tts_message(message):
@@ -193,9 +200,9 @@ async def enqueue_tts_message(message):
     queue = tts_queues.setdefault(session_key, asyncio.Queue())
     await queue.put(message)
 
-    if session_key not in tts_workers:
-        tts_workers.add(session_key)
-        asyncio.create_task(tts_worker(session_key))
+    worker = tts_workers.get(session_key)
+    if not worker or worker.done():
+        tts_workers[session_key] = asyncio.create_task(tts_worker(session_key))
 
 
 def clear_queue(queue):
@@ -212,6 +219,9 @@ async def voice_disconnect(session_key, voice_client):
     queue = tts_queues.get(session_key)
     if queue:
         clear_queue(queue)
+    worker = tts_workers.pop(session_key, None)
+    if worker and not worker.done() and worker is not asyncio.current_task():
+        worker.cancel()
 
     try:
         if not voice_client.is_connected():

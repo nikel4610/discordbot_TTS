@@ -47,20 +47,29 @@ except ValueError as exc:
 FFMPEG_EXECUTABLE = get_ffmpeg_exe()
 BOT_SMOKE_TEST = os.getenv('BOT_SMOKE_TEST') == '1'
 TTS_REPLACEMENTS = {
-    'ㅋㅋ': '크크',
-    'ㅎㅎ': '흐흐',
-    'ㅠㅠ': '유유',
-    'ㅜㅜ': '우우',
-    'ㅇㅇ': '응응',
-    'ㄴㄴ': '노노',
-    'ㄱㄱ': '고고',
-    'ㄷㄷ': '덜덜',
-    'ㅂㅂ': '바이바이',
     'ㅅㄱ': '수고',
     'ㅇㅋ': '오케이',
     'ㄱㅅ': '감사',
     'ㅈㅅ': '죄송',
     'ㅎㅇ': '하이',
+}
+TTS_CHARACTER_REPLACEMENTS = {
+    'ㄱ': '고',
+    'ㄴ': '노',
+    'ㄷ': '덜',
+    'ㄹ': '리을',
+    'ㅁ': '미음',
+    'ㅂ': '브',
+    'ㅅ': '스',
+    'ㅇ': '응',
+    'ㅈ': '즈',
+    'ㅊ': '츠',
+    'ㅋ': '크',
+    'ㅌ': '트',
+    'ㅍ': '프',
+    'ㅎ': '흐',
+    'ㅠ': '유',
+    'ㅜ': '우',
 }
 
 intents = discord.Intents.default()
@@ -77,7 +86,8 @@ def preprocess_message_content(content):
     content = content.strip()
     for source, replacement in TTS_REPLACEMENTS.items():
         content = content.replace(source, replacement)
-    content = content.replace('ㅋ', '크').replace('ㅎ', '흐').replace('ㅠ', '유').replace('ㅜ', '우')
+    for source, replacement in TTS_CHARACTER_REPLACEMENTS.items():
+        content = content.replace(source, replacement)
     if len(content) > MAX_TTS_LENGTH:
         content = f'{content[:MAX_TTS_LENGTH]}... 이하 생략'
     return content

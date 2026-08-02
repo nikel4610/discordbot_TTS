@@ -9,6 +9,13 @@ python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
+Ubuntu 서버에서는 Discord 음성 송출에 Opus 라이브러리가 필요합니다.
+
+```bash
+sudo apt update
+sudo apt install -y libopus0
+```
+
 `.env`에 Discord 봇 토큰과 읽을 텍스트 채널 ID를 설정합니다.
 
 ```dotenv

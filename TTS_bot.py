@@ -5,12 +5,30 @@ import time
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from imageio_ffmpeg import get_ffmpeg_exe
 from navertts import NaverTTS
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-TARGET_CHANNEL_IDS = list(map(int, os.getenv('TARGET_CHANNEL_IDS').split(',')))
+
+if not BOT_TOKEN:
+    raise RuntimeError('BOT_TOKEN is missing. Set it in the .env file.')
+
+try:
+    TARGET_CHANNEL_IDS = [
+        int(channel_id.strip())
+        for channel_id in os.getenv('TARGET_CHANNEL_IDS', '').split(',')
+        if channel_id.strip()
+    ]
+except ValueError as exc:
+    raise RuntimeError('TARGET_CHANNEL_IDS must be comma-separated Discord channel IDs.') from exc
+
+if not TARGET_CHANNEL_IDS:
+    raise RuntimeError('TARGET_CHANNEL_IDS is missing. Set at least one text channel ID in the .env file.')
+
+FFMPEG_EXECUTABLE = get_ffmpeg_exe()
+BOT_SMOKE_TEST = os.getenv('BOT_SMOKE_TEST') == '1'
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -33,7 +51,10 @@ async def speak_message(message, voice_client):
     if voice_client.is_playing():
         voice_client.stop()
 
-    voice_client.play(discord.FFmpegPCMAudio(filename), after=lambda e: os.remove(filename))
+    voice_client.play(
+        discord.FFmpegPCMAudio(filename, executable=FFMPEG_EXECUTABLE),
+        after=lambda e: os.remove(filename),
+    )
 
     while voice_client.is_playing():
         await asyncio.sleep(1)
@@ -44,7 +65,7 @@ async def voice_disconnect(voice_client, channel_id):
         filename = f'tts_disconnect_{channel_id}_{int(time.time())}.mp3'
         tts.save(filename)
 
-        voice_client.play(discord.FFmpegPCMAudio(filename))
+        voice_client.play(discord.FFmpegPCMAudio(filename, executable=FFMPEG_EXECUTABLE))
 
         await asyncio.sleep(3)
         os.remove(filename)
@@ -61,8 +82,11 @@ async def find_voice_channel(guild, user):
 
 @bot.event
 async def on_ready():
-    print(f'We have logged in as {bot.user}')
-    check_voice_channel.start()
+    print(f'We have logged in as {bot.user}', flush=True)
+    if not check_voice_channel.is_running():
+        check_voice_channel.start()
+    if BOT_SMOKE_TEST:
+        await bot.close()
 
 @bot.event
 async def on_message(message):
@@ -142,4 +166,5 @@ async def check_voice_channel():
         if len(voice_client.channel.members) == 1:  # Only the bot is in the channel
             await voice_disconnect(voice_client, channel_id)
 
-bot.run(BOT_TOKEN)
+if __name__ == '__main__':
+    bot.run(BOT_TOKEN)

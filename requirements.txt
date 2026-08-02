@@ -1,6 +1,4 @@
-discord.py
-NaverTTS
-asyncio
-python-dotenv
-ffmpeg-python
 discord.py[voice]
+imageio-ffmpeg
+NaverTTS
+python-dotenv

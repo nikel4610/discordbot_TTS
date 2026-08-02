@@ -39,6 +39,11 @@ try:
 except ValueError as exc:
     raise RuntimeError('MAX_TTS_LENGTH must be an integer.') from exc
 
+try:
+    LEAVE_DISCONNECT_DELAY = float(os.getenv('LEAVE_DISCONNECT_DELAY', '2.0'))
+except ValueError as exc:
+    raise RuntimeError('LEAVE_DISCONNECT_DELAY must be a number.') from exc
+
 FFMPEG_EXECUTABLE = get_ffmpeg_exe()
 BOT_SMOKE_TEST = os.getenv('BOT_SMOKE_TEST') == '1'
 
@@ -136,6 +141,7 @@ async def play_audio_file_until_done(voice_client, filename):
         )
         while voice_client.is_playing():
             await asyncio.sleep(0.2)
+        await asyncio.sleep(LEAVE_DISCONNECT_DELAY)
     except Exception:
         remove_file(filename)
         raise

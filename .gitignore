@@ -1,6 +1,7 @@
 
 
 *.mp3
+bot*.log
 __pycache__/
 .venv/
 .env

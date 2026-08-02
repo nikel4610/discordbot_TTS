@@ -333,22 +333,32 @@ async def on_message(message):
         elif content == '!help':
             embed = discord.Embed(
                 title='무식봇 사용 방법',
-                description='텍스트 채널에 입력한 내용을 같은 서버의 음성 채널에서 읽어줍니다.',
+                description='마이크를 쓰기 어려울 때 채팅을 음성으로 읽어주는 TTS 봇입니다.',
                 color=discord.Color.blue()
             )
             embed.add_field(
-                name='TTS 읽기',
-                value='음성 채널에 들어간 상태에서 이 채널에 메시지를 보내면 순서대로 읽어줍니다.',
+                name='기본 사용',
+                value='음성 채널에 들어간 뒤 이 텍스트 채널에 메시지를 보내면 순서대로 읽어줍니다.',
                 inline=False
             )
             embed.add_field(
                 name='명령어',
-                value='`!help` 사용 방법 보기\n`!leave` 음성 채널에서 나가기',
+                value='`!help` 사용 방법 보기\n`!leave` 안내 음성을 재생한 뒤 음성 채널에서 나가기',
                 inline=False
             )
             embed.add_field(
-                name='주의',
-                value=f'서버별로 독립 동작하며, 등록된 텍스트 채널에서만 반응합니다.\n한 번에 읽는 글자 수는 최대 {MAX_TTS_LENGTH}자입니다.',
+                name='읽기 규칙',
+                value=f'메시지는 입력 순서대로 읽습니다.\n한 번에 읽는 글자 수는 최대 {MAX_TTS_LENGTH}자입니다.\n첨부파일만 보낸 경우에는 첨부파일 안내로 읽습니다.',
+                inline=False
+            )
+            embed.add_field(
+                name='줄임말 읽기',
+                value='`ㅅㄱ` 수고, `ㅇㅋ` 오케이, `ㄱㅅ` 감사, `ㅈㅅ` 죄송, `ㅎㅇ` 하이\n남은 초성은 글자별로 읽습니다. 예: `ㅇㅇ` 응응, `ㄴㄴㄴ` 노노노, `ㅋㅋ` 크크',
+                inline=False
+            )
+            embed.add_field(
+                name='동작 범위',
+                value='등록된 텍스트 채널에서만 반응합니다.\n서버별로 독립 동작해서 다른 서버 음성 채널로 넘어가지 않습니다.\n음성 채널에 사람이 없으면 자동으로 나갑니다.',
                 inline=False
             )
             await message.channel.send(embed=embed)

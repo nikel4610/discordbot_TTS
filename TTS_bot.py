@@ -46,6 +46,22 @@ except ValueError as exc:
 
 FFMPEG_EXECUTABLE = get_ffmpeg_exe()
 BOT_SMOKE_TEST = os.getenv('BOT_SMOKE_TEST') == '1'
+TTS_REPLACEMENTS = {
+    'ㅋㅋ': '크크',
+    'ㅎㅎ': '흐흐',
+    'ㅠㅠ': '유유',
+    'ㅜㅜ': '우우',
+    'ㅇㅇ': '응응',
+    'ㄴㄴ': '노노',
+    'ㄱㄱ': '고고',
+    'ㄷㄷ': '덜덜',
+    'ㅂㅂ': '바이바이',
+    'ㅅㄱ': '수고',
+    'ㅇㅋ': '오케이',
+    'ㄱㅅ': '감사',
+    'ㅈㅅ': '죄송',
+    'ㅎㅇ': '하이',
+}
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -59,7 +75,9 @@ disconnecting_sessions = set()
 
 def preprocess_message_content(content):
     content = content.strip()
-    content = content.replace('ㅋ', '크').replace('ㅎ', '흐').replace('ㅠ', '유')
+    for source, replacement in TTS_REPLACEMENTS.items():
+        content = content.replace(source, replacement)
+    content = content.replace('ㅋ', '크').replace('ㅎ', '흐').replace('ㅠ', '유').replace('ㅜ', '우')
     if len(content) > MAX_TTS_LENGTH:
         content = f'{content[:MAX_TTS_LENGTH]}... 이하 생략'
     return content

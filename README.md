@@ -14,6 +14,7 @@ Copy-Item .env.example .env
 ```dotenv
 BOT_TOKEN=your_discord_bot_token_here
 TARGET_CHANNEL_IDS=123456789012345678,234567890123456789
+MAX_TTS_LENGTH=300
 ```
 
 Discord Developer Portal의 Bot 설정에서 `Message Content Intent`를 켜야 일반 메시지 내용을 읽을 수 있습니다.

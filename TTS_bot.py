@@ -123,6 +123,24 @@ async def play_audio_file(voice_client, filename):
     await done.wait()
 
 
+async def play_audio_file_until_done(voice_client, filename):
+    def after_play(error):
+        if error:
+            LOGGER.warning('Audio playback error: %s', error)
+        remove_file(filename)
+
+    try:
+        voice_client.play(
+            discord.FFmpegPCMAudio(filename, executable=FFMPEG_EXECUTABLE),
+            after=after_play,
+        )
+        while voice_client.is_playing():
+            await asyncio.sleep(0.2)
+    except Exception:
+        remove_file(filename)
+        raise
+
+
 async def speak_message(message, voice_client):
     content = get_message_content(message)
     if not content:
@@ -231,7 +249,7 @@ async def voice_disconnect(session_key, voice_client):
 
         try:
             filename = await create_tts_file('무식이는 이만 나가볼게요', f'tts_disconnect_{session_key[0]}_{session_key[1]}_')
-            await play_audio_file(voice_client, filename)
+            await play_audio_file_until_done(voice_client, filename)
         except Exception as exc:
             LOGGER.warning('Disconnect TTS failed: %s', exc)
 
